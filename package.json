@@ -1,0 +1,16 @@
+{
+  "name": "untitled1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "eosjs": "^20.0.3",
+    "fetch": "^1.1.0",
+    "ip": "^1.1.5",
+    "node-fetch": "^2.6.0",
+    "stun": "^2.1.0"
+  },
+  "scripts": {
+    "publish": "pkg -t win src/main.js"
+  }
+}
