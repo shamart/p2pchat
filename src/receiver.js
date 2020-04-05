@@ -6,10 +6,10 @@ const ip = require('ip');
 const {to} = require("./api/eos");
 
 const socket = dgram.createSocket('udp4');
-const localHost = ip.address();
-// const localHost = '192.168.0.41';
+// const localHost = ip.address();
+const localHost = '0.0.0.0';
 const localPort = 6668;
-const serverHost = '192.168.0.41';
+const serverHost = '39.108.115.36';
 const serverPort = 6666;
 
 socket.bind(localPort, localHost);
@@ -20,7 +20,7 @@ let addr2handler = new Map();
 let availableFrom = [];
 
 setInterval(function () {
-    if (oldFromAddrs !== fromAddrs) {
+    if (JSON.stringify(oldFromAddrs) !== JSON.stringify(fromAddrs)) {
         oldFromAddrs = fromAddrs;
 
         for (const fromAddr of fromAddrs) {
@@ -124,7 +124,7 @@ rl.on("line", async function (line) {
                 rl.prompt();
                 console.log('fetch local ip..');
 
-                const localPrivateAddr = `${localHost}:${localPort}`;
+                const localPrivateAddr = `${ip.address()}:${localPort}`;
                 const addr = [localPublicAddr];
                 if (localPrivateAddr !== localPublicAddr) {
                     addr.push(localPrivateAddr);

@@ -5,14 +5,15 @@ const ip = require('ip');
 const {fetchSession} = require("./api/eos");
 
 const socket = dgram.createSocket('udp4');
-const localHost = ip.address();
-// const localHost = '192.168.0.41';
+// const localHost = ip.address();
+const localHost = '0.0.0.0';
 const localPort = 6667;
-const serverHost = '192.168.0.41';
+const serverHost = '39.108.115.36';
 const serverPort = 6666;
 
 socket.bind(localPort, localHost);
 
+let channel;
 let stat = 'offline';
 let localPublicAddr;
 let toAddrs;
@@ -102,6 +103,15 @@ const connectedHandler = setInterval(function () {
     }
 }, 200);
 
+const findToHandler = setInterval(async function () {
+    const session = await fetchSession();
+    const find = session.rows.find(x => x.key === channel);
+    if (find && find.to) {
+        clearInterval(findToHandler);
+        toAddrs = JSON.parse(find.to);
+    }
+},300);
+
 
 rl.on("line", async function (line) {
     if (stat === 'offline') {
@@ -109,22 +119,16 @@ rl.on("line", async function (line) {
         if (isNaN(number)) {
             throw 'invalid number';
         }
+        channel = number;
         stat = 'connecting';
-        const session = await fetchSession();
-        const find = session.rows.find(x => x.key === number);
-        if (!find) {
-            throw 'non-exist channel';
-        }
-        if (find.to) {
-            toAddrs = JSON.parse(find.to);
-        }
+
         const handler = setInterval(async function () {
             if (localPublicAddr) {
                 clearInterval(handler);
                 rl.setPrompt(number + '> ');
                 rl.prompt();
                 console.log('fetch local ip..');
-                const localPrivateAddr = `${localHost}:${localPort}`;
+                const localPrivateAddr = `${ip.address()}:${localPort}`;
                 const addr = [localPublicAddr];
                 if (localPrivateAddr !== localPublicAddr) {
                     addr.push(localPrivateAddr);
