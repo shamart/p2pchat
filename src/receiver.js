@@ -25,7 +25,7 @@ setInterval(function () {
 
         for (const fromAddr of fromAddrs) {
             const handler = setInterval(function () {
-                console.log("send shake to " + fromAddr)
+                // console.log("send shake to " + fromAddr)
                 const [host, port] = fromAddr.split(':');
                 socket.send(JSON.stringify({
                     type: 'shake',
@@ -67,12 +67,16 @@ socket.on("message", function (message, remote) {
         })
     } else if (type === 'shakeAns') {
         const handler = addr2handler.get(msg.body);
-        console.log('shakeAns, clear handler, ip:' + msg.body)
+        // console.log('shakeAns, clear handler, ip:' + msg.body)
         clearInterval(handler);
         const find = availableFrom.find(x => x === msg.body);
         if (!find) {
             availableFrom.push(msg.body);
         }
+    }else if (type === 'chat') {
+        console.log('[sender] ' + msg.body);
+        rl.prompt();
+
     }
 });
 
@@ -85,6 +89,17 @@ console.log('channel number?');
 rl.setPrompt('?> ');
 rl.prompt();
 
+const connectedHandler = setInterval(function () {
+    if (availableFrom.length > 0) {
+        if (stat === 'shake') {
+            clearInterval(connectedHandler);
+            stat = 'connected';
+            rl.prompt();
+            console.log('connected! chat now!');
+            rl.prompt();
+        }
+    }
+}, 200);
 
 let stat = 'offline';
 
@@ -107,18 +122,31 @@ rl.on("line", async function (line) {
                 clearInterval(handler);
                 rl.setPrompt(number + '> ');
                 rl.prompt();
-                console.log('local public ip ' + localPublicAddr);
+                console.log('fetch local ip..');
+
                 const localPrivateAddr = `${localHost}:${localPort}`;
                 const addr = [localPublicAddr];
                 if (localPrivateAddr !== localPublicAddr) {
                     addr.push(localPrivateAddr);
                 }
+                rl.prompt();
+                console.log('shake on eos..');
                 await to(number, JSON.stringify(addr));
                 stat = 'shake';
             }
         }, 500);
     } else if (stat === 'connected') {
         if (line) {
+            const [host,port] = availableFrom[0].split(':');
+            socket.send(JSON.stringify({
+                type: 'chat',
+                body: line
+            }), port, host, function (e) {
+                if (e) {
+                    console.log(e)
+                }
+            });
+            rl.prompt();
         }
     }
 });
