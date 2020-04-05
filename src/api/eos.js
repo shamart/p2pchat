@@ -2,12 +2,16 @@
 const {api, rpc} = require("../utils/eos");
 
 
-async function fetchSession() {
+async function fetchSession(lower_bound,upper_bound) {
     return rpc.get_table_rows({
         json: true,
         code: 'jeffjeff2121',
         scope: 'jeffjeff2121',
-        table: 'session'
+        table: 'session',
+        table_key:'key',
+        lower_bound:lower_bound,
+        upper_bound:upper_bound
+
     })
 }
 

@@ -11,6 +11,7 @@
     "stun": "^2.1.0"
   },
   "scripts": {
-    "publish": "pkg -t win src/main.js"
+    "sender": "pkg -t win src/sender.js",
+    "receiver": "pkg -t win src/receiver.js"
   }
 }

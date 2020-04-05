@@ -111,7 +111,7 @@ rl.on("line", async function (line) {
             throw 'invalid number'
         }
         stat = 'connecting';
-        const session = await fetchSession();
+        const session = await fetchSession(number,number);
         const find = session.rows.find(x => x.key === number);
         if (!find) {
             throw 'non-exist channel';

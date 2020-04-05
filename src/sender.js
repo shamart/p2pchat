@@ -104,13 +104,16 @@ const connectedHandler = setInterval(function () {
 }, 200);
 
 const findToHandler = setInterval(async function () {
-    const session = await fetchSession();
-    const find = session.rows.find(x => x.key === channel);
-    if (find && find.to) {
-        clearInterval(findToHandler);
-        toAddrs = JSON.parse(find.to);
+    if (channel) {
+        const session = await fetchSession(channel,channel);
+        const find = session.rows.find(x => x.key === channel);
+        if (find && find.to) {
+            clearInterval(findToHandler);
+            toAddrs = JSON.parse(find.to);
+        }
     }
-},300);
+
+},1000);
 
 
 rl.on("line", async function (line) {
@@ -133,9 +136,9 @@ rl.on("line", async function (line) {
                 if (localPrivateAddr !== localPublicAddr) {
                     addr.push(localPrivateAddr);
                 }
+                await from(number, JSON.stringify(addr));
                 rl.prompt();
                 console.log('shake on eos..');
-                await from(number, JSON.stringify(addr));
                 stat = 'shake';
 
             }
