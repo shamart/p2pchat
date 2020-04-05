@@ -6,8 +6,8 @@ const ip = require('ip');
 const {to} = require("./api/eos");
 
 const socket = dgram.createSocket('udp4');
-// const localhost = ip.address();
-const localHost = '192.168.0.41';
+const localHost = ip.address();
+// const localHost = '192.168.0.41';
 const localPort = 6668;
 const serverHost = '192.168.0.41';
 const serverPort = 6666;

@@ -8,7 +8,7 @@ const localhost = ip.address();
 
 
 const socket = dgram.createSocket('udp4');
-socket.bind(6666, '192.168.0.41');
+socket.bind(6666, localhost);
 
 let publicEndpointA = null;
 let publicEndpointB = null;
