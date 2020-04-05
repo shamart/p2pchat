@@ -15,19 +15,28 @@ const serverPort = 6666;
 socket.bind(localPort, localHost);
 let localPublicAddr;
 let fromAddrs;
+let oldFromAddrs;
+let addr2handler = new Map();
+let availableFrom = [];
 
-const shakeHandler = setInterval(function () {
-    if (fromAddrs) {
+setInterval(function () {
+    if (oldFromAddrs !== fromAddrs) {
+        oldFromAddrs = fromAddrs;
+
         for (const fromAddr of fromAddrs) {
-            console.log("send shake to " + fromAddr)
-            const [host, port] = fromAddr.split(':');
-            socket.send(JSON.stringify({
-                type: 'shake'
-            }), port, host, function (e) {
-                if (e) {
-                    console.log(e)
-                }
-            })
+            const handler = setInterval(function () {
+                console.log("send shake to " + fromAddr)
+                const [host, port] = fromAddr.split(':');
+                socket.send(JSON.stringify({
+                    type: 'shake',
+                    body: fromAddr
+                }), port, host, function (e) {
+                    if (e) {
+                        console.log(e)
+                    }
+                })
+            }, 500);
+            addr2handler.set(fromAddr, handler);
         }
     }
 }, 500);
@@ -44,10 +53,26 @@ socket.send(msg, 0, msg.length, serverPort, serverHost, function (error, bytes) 
 
 socket.on("message", function (message, remote) {
     const msg = JSON.parse(`${message}`);
+    const type = msg.type;
     if (msg.type === 'fetchIpAns') {
         localPublicAddr = msg.body;
     } else if (type === 'shake') {
-
+        socket.send(JSON.stringify({
+            type: 'shakeAns',
+            body: msg.body
+        }), remote.port, remote.address, function (e) {
+            if (e) {
+                console.log(e);
+            }
+        })
+    } else if (type === 'shakeAns') {
+        const handler = addr2handler.get(msg.body);
+        console.log('shakeAns, clear handler, ip:' + msg.body)
+        clearInterval(handler);
+        const find = availableFrom.find(x => x === msg.body);
+        if (!find) {
+            availableFrom.push(msg.body);
+        }
     }
 });
 

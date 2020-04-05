@@ -14,23 +14,31 @@ const serverPort = 6666;
 socket.bind(localPort, localHost);
 let localPublicAddr;
 let toAddrs;
+let oldToAddrs;
+let addr2handler = new Map();
+let availableTo = [];
+setInterval(function () {
+    if (JSON.stringify(oldToAddrs) !== JSON.stringify(toAddrs)) {
+        oldToAddrs = toAddrs;
 
-
-const shakeHandler = setInterval(function () {
-    if (toAddrs) {
         for (const toAddr of toAddrs) {
-            const [host, port] = toAddr.split(':');
-            console.log("send shake to " + toAddr);
-            socket.send(JSON.stringify({
-                type: 'shake'
-            }), port, host, function (e) {
-                if (e) {
-                    console.log(e)
-                }
-            })
+            const handler = setInterval(function () {
+                console.log("send shake to " + toAddr);
+                const [host, port] = toAddr.split(':');
+                socket.send(JSON.stringify({
+                    type: 'shake',
+                    body: toAddr
+                }), port, host, function (e) {
+                    if (e) {
+                        console.log(e)
+                    }
+                })
+            }, 500);
+            addr2handler.set(toAddr, handler);
         }
     }
 }, 500);
+
 
 const msg = JSON.stringify({
     type: "fetchIp"
@@ -47,8 +55,23 @@ socket.on("message", function (message, remote) {
     const type = msg.type;
     if (type === 'fetchIpAns') {
         localPublicAddr = msg.body;
+    } else if (type === 'shakeAns') {
+        const handler = addr2handler.get(msg.body);
+        console.log('shakeAns, clear handler, ip:' + msg.body)
+        clearInterval(handler);
+        const find = availableTo.find(x => x === msg.body);
+        if (!find) {
+            availableTo.push(msg.body);
+        }
     } else if (type === 'shake') {
-
+        socket.send(JSON.stringify({
+            type: 'shakeAns',
+            body: msg.body
+        }), remote.port, remote.address, function (e) {
+            if (e) {
+                console.log(e);
+            }
+        })
     }
 });
 
